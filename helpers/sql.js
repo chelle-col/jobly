@@ -62,7 +62,7 @@ function makeWhereQuery(data) {
   const {
     maxQuery,
     maxValue
-  } = getMaxQuery(data.maxValue, index2);
+  } = getMaxQuery(data.maxEmployees, index2);
 
   // Filter out null values
   const phrases = [nameQuery, minQuery, maxQuery].filter(val =>{
