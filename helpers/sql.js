@@ -90,7 +90,7 @@ function checkMinMax(data) {
 
 function checkKeys(data){
   if(!data.name && !data.minEmployees && !data.maxEmployees){
-    throw new BadRequestError('Only sortable by name, minEmployees and maxEmployees');
+    throw new BadRequestError('Only searchable by name, minEmployees and maxEmployees');
   }
 }
 
