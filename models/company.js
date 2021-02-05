@@ -2,7 +2,7 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate, makeWhereQuery } = require("../helpers/sql");
+const { sqlForPartialUpdate, makeWhereQuery, checkKeys, checkMinMax } = require("../helpers/sql");
 
 /** Related functions for companies. */
 
@@ -50,8 +50,22 @@ class Company {
    * */
 
   static async findAll(data) {
-    let query = makeWhereQuery(data);
-    console.log(query);
+
+    // Throw errors if nessasary
+    checkMinMax(data);
+    checkKeys(data, ['name', 'minEmployees', 'maxEmployees']);
+
+    // Assemble a query string
+    const query = makeWhereQuery(data, {
+      name: 'iLIKE',
+      minEmployees: '>',
+      maxEmployees: '<'
+    },{
+      minEmployees: 'num_employees',
+      maxEmployees: 'num_employees'
+    });
+
+    // Make query
     const companiesRes = await db.query(
           `SELECT handle,
                   name,

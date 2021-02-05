@@ -1,3 +1,4 @@
+const { options } = require("../app");
 const {
   BadRequestError
 } = require("../expressError");
@@ -26,10 +27,13 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
 
 /** Find all with paramaters
  * 
- * Takes in {name: value} 
+ * Takes in {name: value} {name: "iLIKE"} {minEmployees: min_employees}
  * Returns {where: string, values: []}
  */
-function makeWhereQuery(data) {
+function makeWhereQuery(data, operators, jsToSql) {
+  
+  const dataKeys = Object.keys(data);
+
   // Will return empty object without data
   if (Object.keys(data).length === 0) {
     return {
@@ -37,40 +41,15 @@ function makeWhereQuery(data) {
       values: []
     };
   }
-  // Check min is not greater then max
-  checkMinMax(data);
-  // Check we have right keywords
-  checkKeys(data);
 
-  let index = 1;
+  // Uses getQuery to build a query string and values using 4 params
+  // ( data, column, operator, index )
+  const queryArray = dataKeys.map( (dataKey, idx) =>{
+    return getQuery(data[dataKey], jsToSql[dataKey] || dataKey, operators[dataKey], idx + 1)
+  })
 
-  // Return like clause if serching for name
-  const {
-    nameQuery,
-    nameValue,
-    index1
-  } = getNameQuery(data.name, index);
-
-  // Return Min clause if min max
-  const {
-    minQuery,
-    minValue,
-    index2
-  } = getMinQuery(data.minEmployees, index1);
-
-  // Max clause if max
-  const {
-    maxQuery,
-    maxValue
-  } = getMaxQuery(data.maxEmployees, index2);
-
-  // Filter out null values
-  const phrases = [nameQuery, minQuery, maxQuery].filter(val =>{
-    if(val) return val;
-  });
-  const values = [nameValue, minValue, maxValue].filter(val =>{
-    if(val) return val;
-  });;
+  const phrases = queryArray.map( i => i.query);
+  const values = queryArray.map( i => i.value);
 
   // Return everything
   return {
@@ -78,7 +57,10 @@ function makeWhereQuery(data) {
     values: values
   };
 }
+
+
 function checkMinMax(data) {
+  // Checks for min and maxEmployees might change to be more modular
   if (data.minEmployees) {
     if (data.maxEmployees) {
       if (data.minEmployees > data.maxEmployees) {
@@ -88,62 +70,59 @@ function checkMinMax(data) {
   }
 }
 
-function checkKeys(data){
-  if(!data.name && !data.minEmployees && !data.maxEmployees){
-    throw new BadRequestError('Only searchable by name, minEmployees and maxEmployees');
+/** Checks the data against the keys passes in
+ * 
+ *   Throw error if there aren't any serchable terms and if there are non key terms
+ */
+function checkKeys(data, keysToCheck){
+  const dataKeys = Object.keys(data);
+
+  let hasAnyKeys = false;
+
+  keysToCheck.forEach(key => {
+    if(dataKeys.includes(key)){
+      hasAnyKeys = true;
+    }
+  });
+
+  keysToCheck.forEach(key =>{
+    const index = dataKeys.indexOf(key);
+    if(index > -1){
+      dataKeys.splice(index, 1);
+    }
+  })
+
+  if(!hasAnyKeys){
+    throw new BadRequestError(`Only searchable by ${keysToCheck.join(', ')}`);
+  }
+
+  if(dataKeys.length > 0 ){
+    throw new BadRequestError(`Please remove extra search terms ${dataKeys.join(', ')} and try again`)
   }
 }
 
-function getNameQuery(name, index) {
-  if (name) {
-    return {
-      nameQuery: `name iLIKE $${index}`,
-      nameValue: `%${name}%`,
-      index1: index++
-    };
-  }else{
-    return {
-      nameQuery: null,
-      nameValue: null,
-      index1: index
-    };
-  }
-}
+/** Builds a query string and value from given params
+ * 
+ *  Returns query: queryString value: value for string
+ */
+function getQuery(data, column, operator, index){
+  let returnValue;
 
-
-function getMinQuery(minVal, index) {
-  if (minVal) {
-    return {
-      minQuery: `num_employees > $${index}`,
-      minValue: minVal,
-      index2: index++
-    }
-  }else{
-    return{
-      minQuery: null,
-      minValue: null,
-      index2: index
-    }
+  if(operator === 'iLIKE'){
+    returnValue = `%${data}%`
+  } else{
+    returnValue = data;
   }
-}
 
-function getMaxQuery(maxVal, index) {
-  if (maxVal) {
-    return {
-      maxQuery: `num_employees < $${index}`,
-      maxValue: maxVal,
-      index3: index++
-    }
-  }else{
-    return {
-      maxQuery: null,
-      maxValue: null,
-      index3: index
-    }
+  return {
+    query: `${column} ${operator} $${index}`,
+    value: returnValue
   }
-}
+};
 
 module.exports = {
   sqlForPartialUpdate,
-  makeWhereQuery
+  makeWhereQuery,
+  checkKeys,
+  checkMinMax
 };
