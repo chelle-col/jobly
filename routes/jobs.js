@@ -11,6 +11,7 @@ const Jobs = require("../models/jobs");
 
 const jobNewSchema = require("../schemas/jobsNew.json");
 const jobSearchSchema = require("../schemas/jobSearchSchema.json");
+const updateJobSchema = require("../schemas/updateJob.json");
 const { json } = require("body-parser");
 // const jobUpdateSchema = require("../schemas/jobsUpdate.json");
 
@@ -49,32 +50,62 @@ router.post('/', ensureLoggedIn, async function(req, res, next){
  */
 router.get('/', ensureLoggedIn, async function(req, res, next){
     try{
+        // Tried to use json schema to vaildate but would not work at all
+        // Seemed to be that without required fields additionalProperties was ignored
         const jobs = await Jobs.findAll(req.query);
         return res.json(jobs);
     }catch (err){
         next(err)
     }
-})
+});
 
+
+/**GET /:id => { job }
+ * Job is { id, title, salary, equity, company_handle }
+ * 
+ * Authorization required: logged in
+ */
 router.get('/:id', ensureLoggedIn, async function(req, res, next){
     try{
+        const job = await Jobs.getByID(req.params.id);
+        return res.json({ job });
+    }catch (err){
+        next(err)
+    }
+});
 
+/**PATCH /:id { fld1, fld2, ... } => { job }
+ * 
+ * Patches job data.
+ * 
+ * Fields can be { title, salary, equity }
+ * 
+ * Returns { id, salary, equity, companyHandle }
+ * 
+ * Authorization required: admin
+ */
+router.patch('/:id', ensureAdmin, async function(req, res, next){
+    try{
+        const validator = jsonschema.validate(req.body, updateJobSchema);
+        if(!validator.valid){
+            const errs = validator.errors.map(e => e.stack);
+            throw new BadRequestError(errs);
+        }
+        const job = await Jobs.patch(req.params.id, req.body);
+        return res.json({ job });
     }catch (err){
         next(err)
     }
 })
 
-router.patch('/:id', ensureLoggedIn, async function(req, res, next){
+/** DELETE /[id]  =>  { deleted: id }
+ *
+ * Authorization: admin
+ */
+router.delete('/:id', ensureAdmin, async function(req, res, next){
     try{
-
-    }catch (err){
-        next(err)
-    }
-})
-
-router.delete('/:id', ensureLoggedIn, async function(req, res, next){
-    try{
-
+        await Jobs.remove(req.params.id);
+        return res.json({ deleted: req.params.id });
     }catch (err){
         next(err)
     }

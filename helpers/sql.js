@@ -35,7 +35,7 @@ function makeWhereQuery(data, operators, jsToSql) {
   const dataKeys = Object.keys(data);
 
   // Will return empty object without data
-  if (Object.keys(data).length === 0) {
+  if (dataKeys.length === 0) {
     return {
       where: '',
       values: []
