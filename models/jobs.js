@@ -1,8 +1,5 @@
 "use strict";
 
-const {
-    database
-} = require("../db");
 const db = require("../db");
 const {
     BadRequestError,
@@ -10,12 +7,19 @@ const {
 } = require("../expressError");
 const {
     sqlForPartialUpdate,
-    makeWhereQuery,
-    checkKeys
+    makeWhereQuery
 } = require("../helpers/sql");
 
-class Jobs {
+/** Related functions foro jobs */
 
+class Jobs {
+    /** Create a job (from data), update db, return new job data.
+     *
+     * data should be { title, salary, equity, companyHandle }
+     *
+     * Returns { id, title, salary, equity, companyHandle }
+     *
+     * */
 
     static async create({
         title,
@@ -49,26 +53,15 @@ class Jobs {
      * 
      *  Returns [{id, title, salary, equity, companyHandle}]
      */
-    static async findAll(data){
+    static async findAll(data) {
 
-        if( data.length > 0 ){
-            checkKeys(data, ['title', 'minSalary', 'equity']);
-        }
-
-        // If equity is not a boolean throw error
         // Refactor into own function
-        if(data.equity){
-            if (data.equity !== 'true'){
-                if( data.equity !== 'false'){
-                    throw new BadRequestError('Equity must be either true or false')
-                }
-            }
+        if (data.hasEquity === true) {
             // Change equity boolean to 0
-            if(data.equity === 'true'){
-                data.equity = 0;
-            }else{
-                delete data.equity;
-            }
+            data.equity = 0;
+            delete data.hasEquity;
+        } else {
+            delete data.hasEquity;
         }
 
         const query = makeWhereQuery(data, {
@@ -78,6 +71,7 @@ class Jobs {
         }, {
             minSalary: 'salary'
         });
+
         const jobsRes = await db.query(
             `SELECT id,
                     title,
@@ -97,7 +91,7 @@ class Jobs {
      * 
      * Throws NotFoundError if not found
      */
-    static async getByID(id){
+    static async getByID(id) {
         const results = await db.query(
             `SELECT id,
                     title,
@@ -111,18 +105,34 @@ class Jobs {
 
         const job = results.rows[0]
 
-        if(!job) {
+        if (!job) {
             throw new NotFoundError(`No job with id of ${id} found`)
         }
 
         return job;
     }
 
-    static async patch(id, data){
+    static async getByCompany(company){
+        const result = await db.query(
+            `SELECT id,
+                    title,
+                    salary,
+                    equity,
+                    company_handle AS "companyHandle"
+            FROM jobs
+            WHERE company_handle = $1`,
+            [company]
+        )
+        return result.rows;
+    }
+
+    static async patch(id, data) {
         // Ensure that there is no change to either id or companyHandle
-        const { setCols, values } = sqlForPartialUpdate(
-            data,
-            {
+        const {
+            setCols,
+            values
+        } = sqlForPartialUpdate(
+            data, {
                 companyHandle: 'company_handle'
             }
         );
@@ -142,7 +152,7 @@ class Jobs {
 
         const job = result.rows[0];
 
-        if(!job){
+        if (!job) {
             throw new NotFoundError(`No job with id of ${id} found`)
         }
 
@@ -150,9 +160,9 @@ class Jobs {
     }
 
     /** Delete given job from database; returns undefined.
-   *
-   * Throws NotFoundError if job not found.
-   **/
+     *
+     * Throws NotFoundError if job not found.
+     **/
     static async remove(id) {
         const result = await db.query(
             `DELETE

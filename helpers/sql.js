@@ -70,37 +70,6 @@ function checkMinMax(data) {
   }
 }
 
-/** Checks the data against the keys passes in
- * 
- *   Throw error if there aren't any serchable terms and if there are non key terms
- */
-function checkKeys(data, keysToCheck){
-  const dataKeys = Object.keys(data);
-
-  let hasAnyKeys = false;
-
-  keysToCheck.forEach(key => {
-    if(dataKeys.includes(key)){
-      hasAnyKeys = true;
-    }
-  });
-
-  keysToCheck.forEach(key =>{
-    const index = dataKeys.indexOf(key);
-    if(index > -1){
-      dataKeys.splice(index, 1);
-    }
-  })
-
-  if(!hasAnyKeys){
-    throw new BadRequestError(`Only searchable by ${keysToCheck.join(', ')}`);
-  }
-
-  if(dataKeys.length > 0 ){
-    throw new BadRequestError(`Please remove extra search terms ${dataKeys.join(', ')} and try again`)
-  }
-}
-
 /** Builds a query string and value from given params
  * 
  *  Returns query: queryString value: value for string
@@ -123,6 +92,5 @@ function getQuery(data, column, operator, index){
 module.exports = {
   sqlForPartialUpdate,
   makeWhereQuery,
-  checkKeys,
   checkMinMax
 };

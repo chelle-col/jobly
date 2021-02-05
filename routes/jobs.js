@@ -10,7 +10,7 @@ const { ensureLoggedIn, ensureAdmin } = require("../middleware/auth");
 const Jobs = require("../models/jobs");
 
 const jobNewSchema = require("../schemas/jobsNew.json");
-const jobSearchSchema = require("../schemas/jobSearchSchema.json");
+const jobSearchSchema = require("../schemas/jobSearch.json");
 const updateJobSchema = require("../schemas/updateJob.json");
 const { json } = require("body-parser");
 // const jobUpdateSchema = require("../schemas/jobsUpdate.json");
@@ -50,8 +50,12 @@ router.post('/', ensureLoggedIn, async function(req, res, next){
  */
 router.get('/', ensureLoggedIn, async function(req, res, next){
     try{
-        // Tried to use json schema to vaildate but would not work at all
-        // Seemed to be that without required fields additionalProperties was ignored
+        const validator = jsonschema.validate(req.body, jobSearchSchema);
+        if(!validator.valid){
+            const errs = validator.errors.map(e => e.stack);
+            throw new BadRequestError(errs);
+        }
+
         const jobs = await Jobs.findAll(req.query);
         return res.json(jobs);
     }catch (err){

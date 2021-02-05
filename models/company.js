@@ -1,8 +1,16 @@
 "use strict";
 
 const db = require("../db");
-const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate, makeWhereQuery, checkKeys, checkMinMax } = require("../helpers/sql");
+const {
+  BadRequestError,
+  NotFoundError
+} = require("../expressError");
+const {
+  sqlForPartialUpdate,
+  makeWhereQuery,
+  checkKeys,
+  checkMinMax
+} = require("../helpers/sql");
 
 /** Related functions for companies. */
 
@@ -16,28 +24,34 @@ class Company {
    * Throws BadRequestError if company already in database.
    * */
 
-  static async create({ handle, name, description, numEmployees, logoUrl }) {
+  static async create({
+    handle,
+    name,
+    description,
+    numEmployees,
+    logoUrl
+  }) {
     const duplicateCheck = await db.query(
-          `SELECT handle
+      `SELECT handle
            FROM companies
            WHERE handle = $1`,
-        [handle]);
+      [handle]);
 
     if (duplicateCheck.rows[0])
       throw new BadRequestError(`Duplicate company: ${handle}`);
 
     const result = await db.query(
-          `INSERT INTO companies
+      `INSERT INTO companies
            (handle, name, description, num_employees, logo_url)
            VALUES ($1, $2, $3, $4, $5)
            RETURNING handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl"`,
-        [
-          handle,
-          name,
-          description,
-          numEmployees,
-          logoUrl,
-        ],
+      [
+        handle,
+        name,
+        description,
+        numEmployees,
+        logoUrl,
+      ],
     );
     const company = result.rows[0];
 
@@ -60,14 +74,14 @@ class Company {
       name: 'iLIKE',
       minEmployees: '>',
       maxEmployees: '<'
-    },{
+    }, {
       minEmployees: 'num_employees',
       maxEmployees: 'num_employees'
     });
 
     // Make query
     const companiesRes = await db.query(
-          `SELECT handle,
+      `SELECT handle,
                   name,
                   description,
                   num_employees AS "numEmployees",
@@ -75,7 +89,7 @@ class Company {
            FROM companies
            ${query.where}
            ORDER BY name`,
-           query.values);
+      query.values);
     return companiesRes.rows;
   }
 
@@ -89,14 +103,14 @@ class Company {
 
   static async get(handle) {
     const companyRes = await db.query(
-          `SELECT handle,
+      `SELECT handle,
                   name,
                   description,
                   num_employees AS "numEmployees",
                   logo_url AS "logoUrl"
            FROM companies
            WHERE handle = $1`,
-        [handle]);
+      [handle]);
 
     const company = companyRes.rows[0];
 
@@ -118,12 +132,14 @@ class Company {
    */
 
   static async update(handle, data) {
-    const { setCols, values } = sqlForPartialUpdate(
-        data,
-        {
-          numEmployees: "num_employees",
-          logoUrl: "logo_url",
-        });
+    const {
+      setCols,
+      values
+    } = sqlForPartialUpdate(
+      data, {
+        numEmployees: "num_employees",
+        logoUrl: "logo_url",
+      });
     const handleVarIdx = "$" + (values.length + 1);
 
     const querySql = `UPDATE companies 
@@ -149,11 +165,11 @@ class Company {
 
   static async remove(handle) {
     const result = await db.query(
-          `DELETE
+      `DELETE
            FROM companies
            WHERE handle = $1
            RETURNING handle`,
-        [handle]);
+      [handle]);
     const company = result.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
