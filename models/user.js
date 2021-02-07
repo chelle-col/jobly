@@ -118,7 +118,7 @@ class User {
   /** Given a username, return data about user.
    *
    * Returns { username, first_name, last_name, is_admin, jobs }
-   *   where jobs is { id, title, company_handle, company_name, state }
+   *   where jobs is { id, title, company_handle, company_name }
    *
    * Throws NotFoundError if user not found.
    **/
@@ -130,8 +130,8 @@ class User {
                   last_name AS "lastName",
                   email,
                   is_admin AS "isAdmin"
-           FROM users
-           WHERE username = $1`,
+          FROM users
+          WHERE users.username = $1`,
         [username],
     );
 
@@ -139,7 +139,49 @@ class User {
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
 
-    return user;
+    // Get jobs that the user has applied for
+    const userJobsRes = await db.query(
+      `SELECT applications.job_id,
+              jobs.title,
+              jobs.company_handle AS "companyHandle",
+              companies.name
+      FROM applications
+      INNER JOIN jobs ON jobs.id = applications.job_id
+      INNER JOIN companies ON companies.handle = jobs.company_handle
+      WHERE applications.username = $1`,
+      [username]).catch( e=> console.log(e));
+
+    const userJobs = userJobsRes.rows;
+              
+    return { user,
+            'jobs':  userJobs };
+  }
+
+  /** Given a username and jobId 
+   * 
+   * Returns jobId if successful
+   * 
+   * Throws NotFoundError if job not found
+   * 
+   * Throws BadRequestError if job is already applied for
+   */
+  static async applyForJob(username, jobId){
+    const results = await db.query(
+      `INSERT INTO applications
+        (username, job_id)
+        VALUES ($1, $2)
+        RETURNING job_id AS jobID`,
+        [username, jobId]
+    ).catch(e => {
+      // Reraise Errors to be more user friendly
+      if( e.code === '23503'){
+        throw new NotFoundError('This job does not exsist. Please pick another')
+      }else if (e.code === '23505'){
+        throw new BadRequestError('Already Applied for This job. Please pick another')
+      }
+    });
+
+    return results.rows[0];
   }
 
   /** Update user data with `data`.

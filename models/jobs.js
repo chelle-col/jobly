@@ -37,11 +37,15 @@ class Jobs {
             throw new BadRequestError(`No company exisits with handle: ${companyHandle}`);
         }
 
+        const queryString = `INSERT INTO jobs
+        (title, salary, equity, company_handle)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, title, salary, equity, company_handle AS "companyHandle"`;
+
+        console.log(queryString);
+
         const result = await db.query(
-            `INSERT INTO jobs
-            (title, salary, equity, company_handle)
-            VALUES ($1, $2, $3, $4)
-            RETURNING id, title, salary, equity, company_handle AS "companyHandle"`,
+            queryString,
             [title, salary, equity, companyHandle]
         )
 

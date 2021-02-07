@@ -71,7 +71,6 @@ router.get("/", ensureAdmin, async function (req, res, next) {
 router.get("/:username", ensureLoggedIn, async function (req, res, next) {
   try {
     if(res.locals.user.username === req.params.username || res.locals.user.isAdmin === true ){
-      console.log(res.locals.user);
       const user = await User.get(req.params.username);
       return res.json({ user });
     }
@@ -109,6 +108,15 @@ router.patch("/:username", ensureLoggedIn, async function (req, res, next) {
     throw new UnauthorizedError();
   } catch (err) {
     return next(err);
+  }
+});
+
+router.post('/:username/job/:jobId', ensureLoggedIn, async function(req, res, next){
+  try{
+    const job = await User.applyForJob(req.params.username, req.params.jobId);
+    return res.json({ applied: job });
+  }catch (err){
+    next(err)
   }
 });
 
