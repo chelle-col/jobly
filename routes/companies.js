@@ -11,6 +11,7 @@ const Company = require("../models/company");
 
 const companyNewSchema = require("../schemas/companyNew.json");
 const companyUpdateSchema = require("../schemas/companyUpdate.json");
+const companySearchSchema = require('../schemas/companySearch.json');
 const Jobs = require("../models/jobs");
 
 const router = new express.Router();
@@ -53,6 +54,11 @@ router.post("/", ensureAdmin, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
+    const validator = jsonschema.validate(req.body, companySearchSchema);
+    if (!validator.valid) {
+      const errs = validator.errors.map(e => e.stack);
+      throw new BadRequestError(errs);
+    }
     const companies = await Company.findAll(req.query);
     return res.json({ companies });
   } catch (err) {
@@ -71,9 +77,7 @@ router.get("/", async function (req, res, next) {
 router.get("/:handle", async function (req, res, next) {
   try {
     const company = await Company.get(req.params.handle);
-    const jobs = await Jobs.getByCompany(req.params.handle);
-    return res.json({ company,
-                      'jobs': jobs });
+    return res.json({ company });
   } catch (err) {
     return next(err);
   }

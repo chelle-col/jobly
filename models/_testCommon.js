@@ -36,8 +36,8 @@ async function commonBeforeAll() {
                       salary,
                       equity,
                       company_handle)
-      VALUES ('j1', 10000, 0.010, c2),
-              ('j2', 20000, 0.010, c3),
+      VALUES ('j1', 10000, 0.010, 'c2'),
+              ('j2', 20000, 0.010, 'c3')
       RETURNING id`
   )
 }

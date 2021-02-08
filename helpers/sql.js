@@ -58,7 +58,10 @@ function makeWhereQuery(data, operators, jsToSql) {
   };
 }
 
-
+/**Checks that min is not greater than max
+ * 
+ * Throws BadRequestError
+ */
 function checkMinMax(data) {
   // Checks for min and maxEmployees might change to be more modular
   if (data.minEmployees) {

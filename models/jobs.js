@@ -42,7 +42,6 @@ class Jobs {
         VALUES ($1, $2, $3, $4)
         RETURNING id, title, salary, equity, company_handle AS "companyHandle"`;
 
-        console.log(queryString);
 
         const result = await db.query(
             queryString,
@@ -81,7 +80,7 @@ class Jobs {
                     title,
                     salary,
                     equity,
-                    company_handle AS companyHandle
+                    company_handle AS "companyHandle"
             FROM jobs
             ${query.where}`,
             query.values
@@ -127,6 +126,9 @@ class Jobs {
             WHERE company_handle = $1`,
             [company]
         )
+        if(result.rows.length === 0){
+            throw new NotFoundError();
+        }
         return result.rows;
     }
 
@@ -150,7 +152,7 @@ class Jobs {
                     title,
                     salary,
                     equity,
-                    company_handle AS companyHandle`,
+                    company_handle AS "companyHandle"`,
             [...values, id]
         );
 

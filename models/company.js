@@ -5,10 +5,12 @@ const {
   BadRequestError,
   NotFoundError
 } = require("../expressError");
+
+const Jobs = require('./jobs');
+
 const {
   sqlForPartialUpdate,
   makeWhereQuery,
-  checkKeys,
   checkMinMax
 } = require("../helpers/sql");
 
@@ -67,7 +69,6 @@ class Company {
 
     // Throw errors if nessasary
     checkMinMax(data);
-    checkKeys(data, ['name', 'minEmployees', 'maxEmployees']);
 
     // Assemble a query string
     const query = makeWhereQuery(data, {
@@ -115,8 +116,11 @@ class Company {
     const company = companyRes.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
+    
+    const jobs = await Jobs.getByCompany(handle);
 
-    return company;
+    return { ...company,
+              'jobs': jobs};
   }
 
   /** Update company data with `data`.
