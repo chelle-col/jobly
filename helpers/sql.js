@@ -25,9 +25,12 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   };
 }
 
-/** Find all with paramaters
+/** Where query builder
  * 
  * Takes in {name: value} {name: "iLIKE"} {minEmployees: min_employees}
+ * 
+ * If no data, Returns empty
+ * 
  * Returns {where: string, values: []}
  */
 function makeWhereQuery(data, operators, jsToSql) {
@@ -79,7 +82,7 @@ function checkMinMax(data) {
  */
 function getQuery(data, column, operator, index){
   let returnValue;
-
+  // Special use case
   if(operator === 'iLIKE'){
     returnValue = `%${data}%`
   } else{

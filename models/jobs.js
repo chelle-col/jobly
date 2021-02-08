@@ -133,7 +133,6 @@ class Jobs {
     }
 
     static async patch(id, data) {
-        // Ensure that there is no change to either id or companyHandle
         const {
             setCols,
             values
