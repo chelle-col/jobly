@@ -60,7 +60,7 @@ describe("create", function () {
 
 describe("findAll", function () {
   test("works: no filter", async function () {
-    let companies = await Company.findAll();
+    let companies = await Company.findAll({});
     expect(companies).toEqual([
       {
         handle: "c1",
@@ -99,6 +99,7 @@ describe("get", function () {
       description: "Desc1",
       numEmployees: 1,
       logoUrl: "http://c1.img",
+      jobs: expect.any(Array),
     });
   });
 

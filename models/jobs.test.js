@@ -199,7 +199,6 @@ describe("update", function () {
       await Jobs.patch(404, updateData);
       fail();
     } catch (err) {
-      console.log(err)
       expect(err instanceof NotFoundError).toBeTruthy();
     }
   });

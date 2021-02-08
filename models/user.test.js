@@ -135,13 +135,14 @@ describe("get", function () {
   test("works", async function () {
     let user = await User.get("u1");
     expect(user).toEqual({
+      jobs:[],
+      user:{
       username: "u1",
       firstName: "U1F",
       lastName: "U1L",
       email: "u1@email.com",
       isAdmin: false,
-      jobs:[]
-    });
+    }});
   });
 
   test("not found if no such user", async function () {
@@ -169,7 +170,6 @@ describe("update", function () {
     expect(job).toEqual({
       username: "u1",
       ...updateData,
-      jobs:[]
     });
   });
 
@@ -183,7 +183,6 @@ describe("update", function () {
       lastName: "U1L",
       email: "u1@email.com",
       isAdmin: false,
-      jobs:[]
     });
     const found = await db.query("SELECT * FROM users WHERE username = 'u1'");
     expect(found.rows.length).toEqual(1);

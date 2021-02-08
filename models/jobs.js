@@ -122,6 +122,15 @@ class Jobs {
      * If no jobs returns an empty array
      */
     static async getByCompany(company){
+        const companyCheck = await db.query(
+            `SELECT handle 
+            FROM companies
+            WHERE handle = $1`,
+            [company]
+        )
+        if (companyCheck.rows.length === 0) {
+            throw new NotFoundError(`No company exisits with handle: ${company}`);
+        }
         const result = await db.query(
             `SELECT id,
                     title,
@@ -132,6 +141,11 @@ class Jobs {
             WHERE company_handle = $1`,
             [company]
         )
+        if(result.rows.length === 0) {
+            console.log('Here in if')
+            return [];
+        }
+        console.log(result.rows);
         return result.rows;
     }
 
