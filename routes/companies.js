@@ -79,6 +79,7 @@ router.get("/:handle", async function (req, res, next) {
     const company = await Company.get(req.params.handle);
     return res.json({ company });
   } catch (err) {
+    console.log(err)
     return next(err);
   }
 });

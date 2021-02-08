@@ -220,6 +220,8 @@ describe("GET /users/:username", function () {
         .get(`/users/u1`)
         .set("authorization", `Bearer ${u1Token}`);
     expect(resp.body).toEqual({
+      user:{
+      jobs:[],
       user: {
         username: "u1",
         firstName: "U1F",
@@ -227,7 +229,7 @@ describe("GET /users/:username", function () {
         email: "user1@user.com",
         isAdmin: false,
       },
-    });
+    }});
   });
 
   test("unauth for anon", async function () {

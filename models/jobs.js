@@ -115,6 +115,12 @@ class Jobs {
         return job;
     }
 
+    /**Returns all jobs posted by a given company
+     * 
+     * Returns [{ id, title, salary, equity, companyHandle }, ...]
+     * 
+     * If no jobs returns an empty array
+     */
     static async getByCompany(company){
         const result = await db.query(
             `SELECT id,
@@ -126,9 +132,6 @@ class Jobs {
             WHERE company_handle = $1`,
             [company]
         )
-        if(result.rows.length === 0){
-            throw new NotFoundError();
-        }
         return result.rows;
     }
 

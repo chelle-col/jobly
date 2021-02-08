@@ -126,14 +126,30 @@ describe("GET /companies/:handle", function () {
   });
 
   test("works for anon: company w/o jobs", async function () {
-    const resp = await request(app).get(`/companies/c2`);
+    const newCompany ={
+        handle: "c4",
+        name: "C4",
+        numEmployees: 4,
+        description: "Desc4",
+        logoUrl: "http://c4.img",
+      };
+    const res = await request(app)
+        .post("/companies")
+        .send(newCompany)
+        .set("authorization", `Bearer ${u3Token}`);
+
+    console.log(res.body);
+
+    const resp = await request(app).get(`/companies/c4`);
+
     expect(resp.body).toEqual({
       company: {
-        handle: "c2",
-        name: "C2",
-        description: "Desc2",
-        numEmployees: 2,
-        logoUrl: "http://c2.img",
+        handle: "c4",
+        name: "C4",
+        description: "Desc4",
+        numEmployees: 4,
+        logoUrl: "http://c4.img",
+        jobs: []
       },
     });
   });
