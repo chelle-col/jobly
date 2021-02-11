@@ -170,7 +170,7 @@ class User {
       `INSERT INTO applications
         (username, job_id)
         VALUES ($1, $2)
-        RETURNING job_id AS jobID`,
+        RETURNING job_id AS "jobID"`,
         [username, jobId]
     ).catch(e => {
       // Reraise Errors to be more user friendly

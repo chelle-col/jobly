@@ -13,6 +13,8 @@ const {
   commonAfterEach,
   commonAfterAll,
 } = require("./_testCommon");
+const Jobs = require("./jobs");
+const app = require("../app");
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
@@ -206,6 +208,43 @@ describe("update", function () {
       await User.update("c1", {});
       fail();
     } catch (err) {
+      expect(err instanceof BadRequestError).toBeTruthy();
+    }
+  });
+});
+
+/************************************** apply */
+
+describe("apply for", function() {
+  const jobInfo = {
+    title: "New Job",
+      salary: 10000,
+      equity: 0,
+      companyHandle: "c1"
+  }
+  test("works", async function() {
+    const newJob = await Jobs.create(jobInfo);
+    const apply = await User.applyForJob("u1", newJob.id);
+    expect(apply).toEqual({jobID:newJob.id});
+  });
+
+  test("throws not found error if job not found", async function(){
+    try{
+      const newJob = await Jobs.create(jobInfo);
+      await User.applyForJob("u1", (newJob.id + 4));
+      fail();
+    } catch (err){
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+
+  test("throws bad request error if applying duplicate", async function(){
+    try{
+      const newJob = await Jobs.create(jobInfo);
+      await User.applyForJob("u1", newJob.id);
+      await User.applyForJob("u1", newJob.id);
+      fail();
+    }catch (err){
       expect(err instanceof BadRequestError).toBeTruthy();
     }
   });
